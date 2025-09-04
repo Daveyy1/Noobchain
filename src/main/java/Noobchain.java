@@ -1,33 +1,35 @@
 import java.util.ArrayList;
 import com.google.gson.*;
+import java.security.*;
+import java.util.Base64;
 
 public class Noobchain {
 
     public static ArrayList<Block> blockchain = new ArrayList<Block>();
-    public static int difficulty = 6;
+    public static int difficulty = 5;
+    public static Wallet walletA;
+    public static Wallet walletB;
 
     public static void main(String[] args) {
 
-        //add blocks to the blockchain
-        blockchain.add(new Block("Genesis Block", "0"));
-        System.out.println("Trying to Mine block 1... (this may take a while) ");
-        blockchain.get(0).mineBlock(difficulty);
+        // setup BounceyCastle as the provider
+        Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
 
+        // create the new wallets
+        walletA = new Wallet();
+        walletB = new Wallet();
 
-        blockchain.add(new Block("Block 2", blockchain.get(blockchain.size()-1).hash));
-        System.out.println("Trying to Mine block 2... (this may take a while) ");
-        blockchain.get(1).mineBlock(difficulty);
+        // test public and private keys
+        System.out.println("Public Key: " + StringUtil.getStringFromKey(walletA.publicKey));
+        System.out.println("Private Key: " + StringUtil.getStringFromKey(walletA.privateKey));
 
+        // create a test transaction from walletA to walletB
+        Transaction transaction = new Transaction(walletA.publicKey, walletB.publicKey, 100, null);
+        transaction.generateSignature(walletA.privateKey);
 
-        blockchain.add(new Block("Block 3", blockchain.get(blockchain.size()-1).hash));
-        System.out.println("Trying to Mine block 3... (this may take a while) ");
-        blockchain.get(2).mineBlock(difficulty);
+        // verify the signature works and verify it with the public key
+        System.out.println("Signature verified: " + transaction.verifySignature());
 
-
-
-        String blockchainJson = new GsonBuilder().setPrettyPrinting().create().toJson(blockchain);
-        System.out.println("\nThe block chain: ");
-        System.out.println(blockchainJson);
     }
 
     // checks if the current blockchain is valid, if there were any changes made to the blocks, this method will return false
