@@ -1,7 +1,9 @@
 import java.security.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class Transaction {
+
     public String transactionId; // the hash of the transaction, unique identifier
     public PublicKey sender; // public key of the sender
     public PublicKey recipient; // public key of the recipient
