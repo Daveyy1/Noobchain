@@ -47,4 +47,61 @@ public class Transaction {
         return StringUtil.verifyECDSASig(sender, data, signature);
     }
 
+    // returns true if new transaction could be created
+    public boolean processTransaction(){
+        if(verifySignature() == false){
+            System.out.println("false transaction signature");
+            return false;
+        }
+
+        // get all transaction inputs (make sure they are unspent)
+        for(TransactionInput i : inputs){
+            i.UTXO = Noobchain.UTXOs.get(i.transactionOutputId);
+        }
+
+        // check if transaction is valid
+        if(getInputsValue() < Noobchain.minimumTransaction){
+            System.out.println("Insufficient funds: " + getInputsValue());
+            return false;
+        }
+
+        // generate transaction outputs
+        float lefOver = getInputsValue() - value; // get value of inputs then the left over change
+        transactionId = calculateHash();
+        outputs.add(new TransactionOutput(this.recipient, value, transactionId)); // send value to recipient
+        outputs.add(new TransactionOutput(this.sender, lefOver, transactionId)); // send the left over "change" back to sender
+
+        // add outputs to Unspend list
+        for(TransactionOutput o : outputs){
+            Noobchain.UTXOs.put(o.id, o);
+        }
+
+        // remove transaction inputs from UTXO lists as spent
+        for(TransactionInput i : inputs){
+            if(i.UTXO == null) continue;
+            Noobchain.UTXOs.remove(i.UTXO.id);
+        }
+
+        return true;
+    }
+
+    // returns sum of input(UTXOs) values
+    public float getInputsValue(){
+        float sum = 0;
+        for(TransactionInput i : inputs){
+            if(i.UTXO == null) continue;
+            sum += i.UTXO.value;
+        }
+        return sum;
+    }
+
+    // return sum of outputs
+    public float getOutputsValue(){
+        float sum = 0;
+        for(TransactionOutput o : outputs){
+            sum += o.value;
+        }
+        return sum;
+    }
+
 }

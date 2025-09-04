@@ -1,9 +1,14 @@
 import java.security.*;
 import java.security.spec.ECGenParameterSpec;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Wallet {
     public PrivateKey privateKey;
     public PublicKey publicKey;
+
+    public HashMap<String, TransactionOutput> UTXOs = new HashMap<String, TransactionOutput>();
 
     public Wallet(){
         generateKeyPair();
@@ -29,5 +34,47 @@ public class Wallet {
         } catch (Exception e){
             throw new RuntimeException(e);
         }
+    }
+
+    // returns balance and stores the UTXOs owned by this wallet in this.UTXOs
+    public float getBalance(){
+        float total = 0;
+        for(Map.Entry<String, TransactionOutput> entry : Noobchain.UTXOs.entrySet()){
+            TransactionOutput UTXO = entry.getValue();
+            if(UTXO.isMine(publicKey)){
+                UTXOs.put(UTXO.id, UTXO);
+                total += UTXO.value;
+            }
+        }
+        return total;
+    }
+
+    // generates and returns a new transaction from this wallet
+    public Transaction sendFunds(PublicKey recipient, float value){
+        if(getBalance() < value){
+            System.out.println("Insufficient funds, Transaction denied. ");
+            return null;
+        }
+
+        // create array list of inputs
+        ArrayList<TransactionInput> inputs = new ArrayList<TransactionInput>();
+
+        float total = 0;
+        for(Map.Entry<String, TransactionOutput> entry : UTXOs.entrySet()){
+            TransactionOutput UTXO = entry.getValue();
+            inputs.add(new TransactionInput(UTXO.id));
+            total += UTXO.value;
+            if(total > value){
+                break;
+            }
+        }
+
+        Transaction newTransaction = new Transaction(this.publicKey, recipient, value, inputs);
+        newTransaction.generateSignature(this.privateKey);
+
+        for(TransactionInput i : inputs){
+            UTXOs.remove(i.transactionOutputId);
+        }
+        return newTransaction;
     }
 }
