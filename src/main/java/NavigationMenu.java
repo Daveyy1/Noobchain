@@ -8,8 +8,6 @@ public class NavigationMenu {
     public static Wallet loadedWallet;
     private static String output = "";
     private static Noobchain noobchain;
-    // Remove this line - always reference WalletManager.wallets directly
-    // public static ArrayList<Wallet> wallets = WalletManager.wallets;
 
     public NavigationMenu(Noobchain noobchain){
         this.noobchain = noobchain;
@@ -75,7 +73,7 @@ public class NavigationMenu {
                         
                         // Validate index range
                         if(walletIndex < 0 || walletIndex >= WalletManager.wallets.size()) {
-                            System.out.println("Invalid wallet index!");
+                            System.out.println("Invalid wallet index! Please enter a number between 1 and " + WalletManager.wallets.size());
                             System.out.println("\nPress Enter to continue...");
                             scanner.nextLine();
                             return true;
@@ -83,14 +81,15 @@ public class NavigationMenu {
                         
                         System.out.println("Loading Wallet...");
                         loadedWallet = loadWallet(walletIndex);
-                        noobchain.setLoadedWallet(loadedWallet);
-                        System.out.println("Wallet loaded successfully!");
+                        // Directly update the static field instead of calling instance method
+                        Noobchain.loadedWallet = loadedWallet;
+                        System.out.println("Wallet '" + loadedWallet.walletName + "' loaded successfully!");
                         // Loop back to menu
                         System.out.println("\nPress Enter to continue...");
                         scanner.nextLine();
                         return true;
                     } catch (Exception e){
-                        System.out.println("Invalid wallet index!");
+                        System.out.println("Invalid wallet index!" + e.getMessage());
                         System.out.println("\nPress Enter to continue...");
                         scanner.nextLine();
                         return true;
