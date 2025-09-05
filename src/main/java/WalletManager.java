@@ -3,10 +3,7 @@ import java.util.ArrayList;
 public class WalletManager {
     public static ArrayList<Wallet> wallets = new ArrayList<>(); // Initialize the ArrayList
 
-    public static void listWallets() throws RuntimeException{
-        if(wallets.isEmpty()) {
-            throw new RuntimeException();
-        }
+    public static void listWallets(){
         String output = "";
         for(int i = 0; i < wallets.size(); i++){
             Wallet w = wallets.get(i);

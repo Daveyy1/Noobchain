@@ -8,7 +8,8 @@ public class NavigationMenu {
     public static Wallet loadedWallet;
     private static String output = "";
     private static Noobchain noobchain;
-    public static ArrayList<Wallet> wallets = WalletManager.wallets;
+    // Remove this line - always reference WalletManager.wallets directly
+    // public static ArrayList<Wallet> wallets = WalletManager.wallets;
 
     public NavigationMenu(Noobchain noobchain){
         this.noobchain = noobchain;
@@ -59,20 +60,32 @@ public class NavigationMenu {
                     int walletIndex;
                     System.out.println("Which wallet would you like to load? (Enter index of wallet)\n");
                     try{
+                        // Check if wallets exist before calling listWallets
+                        if(WalletManager.wallets.isEmpty()) {
+                            System.out.println("No wallets created yet.");
+                            System.out.println("\nPress Enter to continue...");
+                            scanner.nextLine();
+                            return true;
+                        }
+                        
                         WalletManager.listWallets();
                         System.out.print("Enter wallet index: ");
                         walletIndex = scanner.nextInt() - 1;
                         scanner.nextLine(); // Consume newline
+                        
+                        // Validate index range
+                        if(walletIndex < 0 || walletIndex >= WalletManager.wallets.size()) {
+                            System.out.println("Invalid wallet index!");
+                            System.out.println("\nPress Enter to continue...");
+                            scanner.nextLine();
+                            return true;
+                        }
+                        
                         System.out.println("Loading Wallet...");
                         loadedWallet = loadWallet(walletIndex);
                         noobchain.setLoadedWallet(loadedWallet);
                         System.out.println("Wallet loaded successfully!");
                         // Loop back to menu
-                        System.out.println("\nPress Enter to continue...");
-                        scanner.nextLine();
-                        return true;
-                    } catch (RuntimeException e){
-                        System.out.println("No wallets created yet.");
                         System.out.println("\nPress Enter to continue...");
                         scanner.nextLine();
                         return true;

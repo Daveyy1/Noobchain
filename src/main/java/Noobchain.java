@@ -43,7 +43,7 @@ public class Noobchain {
         System.out.println("Genesis block created successfully!\n");
 
         // Create NavigationMenu instance
-        NavigationMenu menu = new NavigationMenu(new Noobchain());
+        //NavigationMenu menu = new NavigationMenu(new Noobchain());
         
         // Main menu loop
         boolean running = true;
