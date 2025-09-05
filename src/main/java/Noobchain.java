@@ -29,7 +29,7 @@ public class Noobchain {
         coinbase = new Wallet();
         loadedWallet = new Wallet("Default Wallet");
 
-        // create genesis transaction which sends 100 coins to 
+        // create genesis transaction which sends 100 coins to the coinbase
         genesisTransaction = new Transaction(coinbase.publicKey, loadedWallet.publicKey, 100, null);
         genesisTransaction.generateSignature(coinbase.privateKey);
         genesisTransaction.transactionId = "0";

@@ -78,11 +78,15 @@ public class NavigationMenu {
                         return true;
                     } catch (Exception e){
                         System.out.println("Invalid wallet index!");
-                        scanner.nextLine(); // Clear invalid input
                         System.out.println("\nPress Enter to continue...");
                         scanner.nextLine();
                         return true;
                     }
+                case 3:
+                    WalletManager.listWalletBalances();
+                    System.out.println("Press enter to continue...");
+                    scanner.nextLine();
+                    return true;
                 default:
                     System.out.println("Feature not implemented yet.");
                     System.out.println("\nPress Enter to continue...");

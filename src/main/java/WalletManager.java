@@ -10,6 +10,18 @@ public class WalletManager {
         String output = "";
         for(int i = 0; i < wallets.size(); i++){
             Wallet w = wallets.get(i);
+            output += i+1 + ": " + w.walletName + "\n";
+        }
+        System.out.println(output);
+    }
+
+    public static void listWalletBalances() throws RuntimeException{
+        if(wallets.isEmpty()) {
+            throw new RuntimeException();
+        }
+        String output = "";
+        for(int i = 0; i < wallets.size(); i++){
+            Wallet w = wallets.get(i);
             output += i+1 + ": " + w.walletName + " (Balance: " + w.getBalance() + ")\n";
         }
         System.out.println(output);
