@@ -27,20 +27,8 @@ public class Noobchain {
 
         // create the coinbase
         coinbase = new Wallet();
-        loadedWallet = new Wallet("Default Wallet");
+        //loadedWallet = new Wallet("Default Wallet");
 
-        // create genesis transaction which sends 100 coins to the coinbase
-        genesisTransaction = new Transaction(coinbase.publicKey, loadedWallet.publicKey, 100, null);
-        genesisTransaction.generateSignature(coinbase.privateKey);
-        genesisTransaction.transactionId = "0";
-        genesisTransaction.outputs.add(new TransactionOutput(genesisTransaction.recipient, genesisTransaction.value, genesisTransaction.transactionId));
-        UTXOs.put(genesisTransaction.outputs.get(0).id, genesisTransaction.outputs.get(0));
-
-        System.out.println("Creating and mining the Genesis Block... ");
-        Block genesis = new Block("0");
-        genesis.addTransaction(genesisTransaction);
-        blockchain.add(genesis);
-        System.out.println("Genesis block created successfully!\n");
 
         // Create NavigationMenu instance
         //NavigationMenu menu = new NavigationMenu(new Noobchain());
@@ -154,5 +142,20 @@ public class Noobchain {
 
     public void setLoadedWallet(Wallet wallet){
         loadedWallet = wallet;
+    }
+
+    public static void createGenesisBlock(Wallet loadedWallet){
+        // create genesis transaction which sends 100 coins to the coinbase
+        genesisTransaction = new Transaction(coinbase.publicKey, loadedWallet.publicKey, 100, null);
+        genesisTransaction.generateSignature(coinbase.privateKey);
+        genesisTransaction.transactionId = "0";
+        genesisTransaction.outputs.add(new TransactionOutput(genesisTransaction.recipient, genesisTransaction.value, genesisTransaction.transactionId));
+        UTXOs.put(genesisTransaction.outputs.get(0).id, genesisTransaction.outputs.get(0));
+
+        System.out.println("Creating and mining the Genesis Block... ");
+        Block genesis = new Block("0");
+        genesis.addTransaction(genesisTransaction);
+        blockchain.add(genesis);
+        System.out.println("Genesis block created successfully!\n");
     }
 }

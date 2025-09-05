@@ -8,6 +8,7 @@ public class NavigationMenu {
     public static Wallet loadedWallet;
     private static String output = "";
     private static Noobchain noobchain;
+    private static boolean isFirstWalletLoad = true; // Track if genesis block has been created
 
     public NavigationMenu(Noobchain noobchain){
         this.noobchain = noobchain;
@@ -56,6 +57,9 @@ public class NavigationMenu {
                     return true;
                 case 2:
                     int walletIndex;
+                    if(isFirstWalletLoad) {
+                        System.out.println("First loaded wallet receives 100 coins, so choose wisely...");
+                    }
                     System.out.println("Which wallet would you like to load? (Enter index of wallet)\n");
                     try{
                         // Check if wallets exist before calling listWallets
@@ -83,13 +87,20 @@ public class NavigationMenu {
                         loadedWallet = loadWallet(walletIndex);
                         // Directly update the static field instead of calling instance method
                         Noobchain.loadedWallet = loadedWallet;
+                        
+                        // Only create genesis block for the first wallet load
+                        if(isFirstWalletLoad){
+                            Noobchain.createGenesisBlock(loadedWallet);
+                            isFirstWalletLoad = false; // Prevent future genesis block creation
+                        }
+                        
                         System.out.println("Wallet '" + loadedWallet.walletName + "' loaded successfully!");
                         // Loop back to menu
                         System.out.println("\nPress Enter to continue...");
                         scanner.nextLine();
                         return true;
                     } catch (Exception e){
-                        System.out.println("Invalid wallet index!" + e.getMessage());
+                        System.out.println("Invalid wallet index!");
                         System.out.println("\nPress Enter to continue...");
                         scanner.nextLine();
                         return true;
@@ -97,6 +108,44 @@ public class NavigationMenu {
                 case 3:
                     WalletManager.listWalletBalances();
                     System.out.println("Press enter to continue...");
+                    scanner.nextLine();
+                    return true;
+                case 4:
+                    if(loadedWallet == null) {
+                        System.out.println("No wallet loaded. Please load a wallet first.");
+                        System.out.println("\nPress Enter to continue...");
+                        scanner.nextLine();
+                        return true;
+                    }
+                    if(loadedWallet.UTXOs.isEmpty()) {
+                        System.out.println("No funds in wallet. Please send funds to this wallet first.");
+                        System.out.println("\nPress Enter to continue...");
+                        scanner.nextLine();
+                        return true;
+                    }
+
+                    WalletManager.listWallets();
+                    System.out.print("Enter Recipient Wallet Index: ");
+                    int recipientIndex = scanner.nextInt() - 1;
+
+                    if(recipientIndex < 0 || recipientIndex >= WalletManager.wallets.size() || recipientIndex == WalletManager.wallets.indexOf(loadedWallet)) {
+                        System.out.println("Invalid wallet index! Please enter a number between 1 and " + WalletManager.wallets.size() + " excluding the current wallet index.");
+                        System.out.println("\nPress Enter to continue...");
+                        scanner.nextLine();
+                        return true;
+                    }
+
+                    Wallet recipientWallet = WalletManager.wallets.get(recipientIndex);
+                    System.out.print("Enter amount to send (in coins): ");
+                    Float amount = scanner.nextFloat();
+
+                    Block newBlock = new Block(Noobchain.blockchain.getLast().hash);
+                    System.out.println("\n Trying to send " + amount + "from " + loadedWallet.walletName + "(" + loadedWallet.getBalance() + ") to wallet '" + recipientWallet.walletName + "'...");
+                    newBlock.addTransaction(loadedWallet.sendFunds(recipientWallet.publicKey, amount));
+                    Noobchain.addBlock(newBlock);
+                    System.out.println("Sender Wallet " + loadedWallet + "Balance: " + loadedWallet.getBalance() + "\n"+
+                            "Recipient Wallet " + recipientWallet + "Balance: " + recipientWallet.getBalance() + "\n");
+                    System.out.println("\nPress Enter to continue...");
                     scanner.nextLine();
                     return true;
                 default:
