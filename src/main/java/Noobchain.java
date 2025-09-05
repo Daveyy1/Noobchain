@@ -3,68 +3,82 @@ import com.google.gson.*;
 import java.security.*;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.Scanner;
 
 public class Noobchain {
 
     public static ArrayList<Block> blockchain = new ArrayList<Block>();
     public static int difficulty = 5;
-    public static Wallet walletA;
-    public static Wallet walletB;
+
+    public static Wallet loadedWallet;
     public static Wallet coinbase;
-    public static HashMap<String, TransactionOutput> UTXOs = new HashMap<String, TransactionOutput>(); // list of all unspent transactions
+
+    public static HashMap<String, TransactionOutput> UTXOs = new HashMap<String, TransactionOutput>();
     public static float minimumTransaction = 0.1f;
     public static Transaction genesisTransaction;
+
+    static Scanner scanner = new Scanner(System.in);
+    private static int menuChoice;
 
     public static void main(String[] args) {
 
         // setup BounceyCastle as the provider
         Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
 
-        // create the new wallets
-        walletA = new Wallet();
-        walletB = new Wallet();
+        // create the coinbase
         coinbase = new Wallet();
+        loadedWallet = new Wallet("Default Wallet");
 
-        // create genesis transaction which sends 100 coins to walletA
-        genesisTransaction = new Transaction(coinbase.publicKey, walletA.publicKey, 100, null);
-        genesisTransaction.generateSignature(coinbase.privateKey); // manually sign the genesis transaction
-        genesisTransaction.transactionId = "0"; // manually set the transactionId
-        genesisTransaction.outputs.add(new TransactionOutput(genesisTransaction.recipient, genesisTransaction.value, genesisTransaction.transactionId)); // manually add the output to the arraylist
-        UTXOs.put(genesisTransaction.outputs.get(0).id, genesisTransaction.outputs.get(0)); // important, store first transaction in UTXO list
+        // create genesis transaction which sends 100 coins to 
+        genesisTransaction = new Transaction(coinbase.publicKey, loadedWallet.publicKey, 100, null);
+        genesisTransaction.generateSignature(coinbase.privateKey);
+        genesisTransaction.transactionId = "0";
+        genesisTransaction.outputs.add(new TransactionOutput(genesisTransaction.recipient, genesisTransaction.value, genesisTransaction.transactionId));
+        UTXOs.put(genesisTransaction.outputs.get(0).id, genesisTransaction.outputs.get(0));
 
-        System.out.println("Creatin and mining the Genesis Block... ");
+        System.out.println("Creating and mining the Genesis Block... ");
         Block genesis = new Block("0");
         genesis.addTransaction(genesisTransaction);
         blockchain.add(genesis);
+        System.out.println("Genesis block created successfully!\n");
 
-        // testing
-        Block block1 = new Block(genesis.hash);
-        System.out.println("\nWalletA's balance is: " + walletA.getBalance());
-        System.out.println("\nWalletA is Attempting to send funds (40) to WalletB...");
-        block1.addTransaction(walletA.sendFunds(walletB.publicKey, 40f));
-        addBlock(block1);
-        System.out.println("\nWalletA's balance is: " + walletA.getBalance());
-        System.out.println("WalletB's balance is: " + walletB.getBalance());
+        // Create NavigationMenu instance
+        NavigationMenu menu = new NavigationMenu(new Noobchain());
+        
+        // Main menu loop
+        boolean running = true;
+        while(running) {
+            NavigationMenu.displayMenu();
+            try {
+                String input = scanner.nextLine().trim();
+                
+                // Check if input is empty
+                if (input.isEmpty()) {
+                    System.out.println("Please enter a valid option.");
+                    continue;
+                }
+                
+                menuChoice = Integer.parseInt(input);
+                System.out.println(NavigationMenu.clearOutput());
+                running = NavigationMenu.runChoice(menuChoice, scanner);
+                
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input! Please enter a number between 0-9.");
+                System.out.println("\nPress Enter to continue...");
+                scanner.nextLine();
+            } catch (Exception e) {
+                System.out.println("An error occurred: " + e.getMessage());
+                System.out.println("\nPress Enter to continue...");
+                scanner.nextLine();
+            }
+        }
 
-        Block block2 = new Block(block1.hash);
-        System.out.println("\nWalletA Attempting to send more funds (1000) than it has...");
-        block2.addTransaction(walletA.sendFunds(walletB.publicKey, 1000f));
-        addBlock(block2);
-        System.out.println("\nWalletA's balance is: " + walletA.getBalance());
-        System.out.println("WalletB's balance is: " + walletB.getBalance());
-
-        Block block3 = new Block(block2.hash);
-        System.out.println("\nWalletB is Attempting to send funds (20) to WalletA...");
-        block3.addTransaction(walletB.sendFunds( walletA.publicKey, 20));
-        addBlock(block3);
-        System.out.println("\nWalletA's balance is: " + walletA.getBalance());
-        System.out.println("WalletB's balance is: " + walletB.getBalance());
-
+        // This will only run when user chooses to exit
+        System.out.println("\nFinal blockchain validation:");
         isChainValid();
-
+        scanner.close();
     }
 
-    // checks if the current blockchain is valid, if there were any changes made to the blocks, this method will return false
     public static Boolean isChainValid(){
         Block currentBlock;
         Block previousBlock;
@@ -72,26 +86,21 @@ public class Noobchain {
         HashMap<String, TransactionOutput> tempUTXOs = new HashMap<String, TransactionOutput>();
         tempUTXOs.put(genesisTransaction.outputs.get(0).id, genesisTransaction.outputs.get(0));
 
-        // loop through blockchain to check hashes
         for(int i = 1; i < blockchain.size(); i++){
             currentBlock = blockchain.get(i);
             previousBlock = blockchain.get(i-1);
 
-            // compare the registered hash with the calculated hash
             if(!currentBlock.hash.equals(currentBlock.calculateHash())){
                 System.out.println("Current Hashes not equal");
                 return false;
-            // compare previous hash and registered previous hash
             } else if (!previousBlock.hash.equals(currentBlock.previousHash)){
                 System.out.println("Previous Hashes not equal");
                 return false;
-            // check if hash is solved
             } else if (!currentBlock.hash.substring(0, difficulty).equals(hashTarget)){
                 System.out.println("This block hasn't been mined");
                 return false;
             }
 
-            // loop through blockchain transactions
             TransactionOutput tempOutput;
             for(int t=0; t < currentBlock.transactions.size(); t++){
                 Transaction currentTransaction = currentBlock.transactions.get(t);
@@ -141,5 +150,9 @@ public class Noobchain {
     public static void addBlock(Block newBlock) {
         newBlock.mineBlock(difficulty);
         blockchain.add(newBlock);
+    }
+
+    public void setLoadedWallet(Wallet wallet){
+        loadedWallet = wallet;
     }
 }

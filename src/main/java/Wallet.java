@@ -5,12 +5,21 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Wallet {
+
+    public String walletName;
+
     public PrivateKey privateKey;
     public PublicKey publicKey;
 
     public HashMap<String, TransactionOutput> UTXOs = new HashMap<String, TransactionOutput>();
 
+    public Wallet(String name){
+        this.walletName = name;
+        generateKeyPair();
+    }
+
     public Wallet(){
+        this.walletName = "Default Wallet";
         generateKeyPair();
     }
 
