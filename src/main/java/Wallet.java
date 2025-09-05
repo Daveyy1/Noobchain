@@ -48,6 +48,7 @@ public class Wallet {
     // returns balance and stores the UTXOs owned by this wallet in this.UTXOs
     public float getBalance(){
         float total = 0;
+        UTXOs.clear(); // Clear existing UTXOs first
         for(Map.Entry<String, TransactionOutput> entry : Noobchain.UTXOs.entrySet()){
             TransactionOutput UTXO = entry.getValue();
             if(UTXO.isMine(publicKey)){
@@ -60,6 +61,7 @@ public class Wallet {
 
     // generates and returns a new transaction from this wallet
     public Transaction sendFunds(PublicKey recipient, float value){
+        // Ensure UTXOs are up to date before checking balance
         if(getBalance() < value){
             System.out.println("Insufficient funds, Transaction denied. ");
             return null;

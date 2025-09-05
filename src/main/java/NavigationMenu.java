@@ -117,7 +117,9 @@ public class NavigationMenu {
                         scanner.nextLine();
                         return true;
                     }
-                    if(loadedWallet.UTXOs.isEmpty()) {
+                    
+                    // Check actual balance instead of local UTXOs
+                    if(loadedWallet.getBalance() <= 0) {
                         System.out.println("No funds in wallet. Please send funds to this wallet first.");
                         System.out.println("\nPress Enter to continue...");
                         scanner.nextLine();
@@ -138,13 +140,15 @@ public class NavigationMenu {
                     Wallet recipientWallet = WalletManager.wallets.get(recipientIndex);
                     System.out.print("Enter amount to send (in coins): ");
                     Float amount = scanner.nextFloat();
+                    scanner.nextLine(); // Consume newline
 
                     Block newBlock = new Block(Noobchain.blockchain.getLast().hash);
-                    System.out.println("\n Trying to send " + amount + "from " + loadedWallet.walletName + "(" + loadedWallet.getBalance() + ") to wallet '" + recipientWallet.walletName + "'...");
+                    System.out.println("\nTrying to send " + amount + " from " + loadedWallet.walletName + " (" + loadedWallet.getBalance() + ") to wallet '" + recipientWallet.walletName + "'...");
                     newBlock.addTransaction(loadedWallet.sendFunds(recipientWallet.publicKey, amount));
                     Noobchain.addBlock(newBlock);
-                    System.out.println("Sender Wallet " + loadedWallet + "Balance: " + loadedWallet.getBalance() + "\n"+
-                            "Recipient Wallet " + recipientWallet + "Balance: " + recipientWallet.getBalance() + "\n");
+                    System.out.println("Transaction successful!");
+                    System.out.println("Sender Wallet " + loadedWallet.walletName + " Balance: " + loadedWallet.getBalance());
+                    System.out.println("Recipient Wallet " + recipientWallet.walletName + " Balance: " + recipientWallet.getBalance());
                     System.out.println("\nPress Enter to continue...");
                     scanner.nextLine();
                     return true;
